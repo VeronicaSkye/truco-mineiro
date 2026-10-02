@@ -2,6 +2,8 @@
 
 > Autêntico jogo de **Truco Mineiro** com manilhas fixas, IA com personalidade, efeitos sonoros sintetizados via Web Audio API e interface visual imersiva estilo mesa de feltro. Construído com tecnologias web puras (**HTML5, CSS3 e JavaScript Vanilla**).
 
+🎮 **[Jogar Online Agora (GitHub Pages)](https://veronicaskye.github.io/truco-mineiro/)**
+
 ---
 
 ## 🌟 Demonstração & Destaques Visuais
