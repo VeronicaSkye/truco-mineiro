@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truco Mineiro — Simulador Clássico de Cartas</title>
+  <meta name="description" content="Jogue o autêntico Truco Mineiro com manilhas fixas direto no seu navegador. Desafie o robô Tião, peça truco, blefe e domine a mesa!">
+  <meta name="theme-color" content="#133826">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-app">
+    <!-- Efeito de impacto do Truco na tela -->
+    <div id="screen-shake-wrapper">
+      
+      <!-- Top Navigation & Placar Header -->
+      <header class="app-header">
+        <div class="brand">
+          <span class="brand-icon">♣</span>
+          <div class="brand-text">
+            <h1>Truco Mineiro</h1>
+            <span class="badge-mineiro">Manilhas Fixas</span>
+          </div>
+        </div>
+
+        <!-- Placar de Tentos Estilo Mesa de Bar -->
+        <div class="scoreboard-wood" id="scoreboard">
+          <div class="score-team player-score-box">
+            <span class="team-label">VOCÊ</span>
+            <span class="score-number" id="player-score">0</span>
+            <div class="feijoes-container" id="player-feijoes" title="Tentos acumulados"></div>
+          </div>
+          <div class="score-divider">
+            <span class="vs-text">X</span>
+            <span class="max-score">12 pts</span>
+          </div>
+          <div class="score-team bot-score-box">
+            <span class="team-label">TIÃO</span>
+            <span class="score-number" id="bot-score">0</span>
+            <div class="feijoes-container" id="bot-feijoes" title="Tentos acumulados"></div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="header-controls">
+          <button id="btn-sound" class="btn-icon" title="Alternar Som" aria-label="Alternar Som">
+            <span id="sound-icon">🔊</span>
+          </button>
+          <button id="btn-rules" class="btn-icon" title="Regras do Truco Mineiro" aria-label="Ver Regras">
+            📖 Regras
+          </button>
+          <button id="btn-restart" class="btn-icon" title="Reiniciar Partida" aria-label="Reiniciar Partida">
+            🔄 Novo Jogo
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Game Felt Table -->
+      <main class="table-container">
+        <div class="table-felt">
+
+          <!-- Guia Rápido das 4 Manilhas Fixas Mineiras -->
+          <aside class="manilhas-fixed-guide" id="manilhas-guide">
+            <div class="guide-title">
+              <span class="guide-sparkle">⚡</span> Manilhas Fixas
+            </div>
+            <div class="guide-cards">
+              <div class="guide-chip" title="Zap / Gato (4 de Paus) - Maior carta do jogo!">
+                <span class="card-mini paus">4♣</span>
+                <span class="mini-name">Zap</span>
+              </div>
+              <div class="guide-chip" title="Copeta (7 de Copas) - 2ª maior">
+                <span class="card-mini copas">7♥</span>
+                <span class="mini-name">Copeta</span>
+              </div>
+              <div class="guide-chip" title="Espadilha (Ás de Espadas) - 3ª maior">
+                <span class="card-mini espadas">A♠</span>
+                <span class="mini-name">Espadilha</span>
+              </div>
+              <div class="guide-chip" title="Pica-fumo / Moleque (7 de Ouros) - 4ª maior">
+                <span class="card-mini ouros">7♦</span>
+                <span class="mini-name">Pica-fumo</span>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Adversário (Bot Tião) -->
+          <section class="bot-area" id="bot-area">
+            <div class="bot-character">
+              <div class="bot-avatar-frame">
+                <div class="bot-avatar">🤠</div>
+                <span class="bot-status-dot" id="bot-status-dot"></span>
+              </div>
+              <div class="bot-info">
+                <span class="bot-name">Tião "Gato de Botas"</span>
+                <div class="bot-bubble" id="bot-speech">
+                  "Uai sô! Pode cortá o baralho que eu já tô com as manilha tudo na mão!"
+                </div>
+              </div>
+            </div>
+
+            <!-- Mão do Robô (virada para baixo) -->
+            <div class="bot-hand" id="bot-hand">
+              <!-- Cartas renderizadas via JS -->
+            </div>
+          </section>
+
+          <!-- Centro da Mesa: Cartas Jogadas e Status das 3 Rodadas -->
+          <section class="table-center">
+            
+            <!-- Indicador do valor da aposta atual da mão -->
+            <div class="hand-stake-badge" id="stake-badge">
+              <span class="stake-icon">🔥</span>
+              <span id="stake-text">Mão Normal: Vale 2 pontos</span>
+            </div>
+
+            <!-- Placar de Rodadas da Mão (Melhor de 3) -->
+            <div class="rounds-tracker" id="rounds-tracker">
+              <div class="round-slot" id="round-slot-1">
+                <span class="round-num">1ª</span>
+                <span class="round-result-icon">-</span>
+              </div>
+              <div class="round-slot" id="round-slot-2">
+                <span class="round-num">2ª</span>
+                <span class="round-result-icon">-</span>
+              </div>
+              <div class="round-slot" id="round-slot-3">
+                <span class="round-num">3ª</span>
+                <span class="round-result-icon">-</span>
+              </div>
+            </div>
+
+            <!-- Tapete de Duelo de Cartas -->
+            <div class="duel-arena">
+              <div class="played-slot bot-slot" id="bot-played-slot">
+                <span class="slot-placeholder">Carta do Tião</span>
+              </div>
+              <div class="duel-vs-circle">VS</div>
+              <div class="played-slot player-slot" id="player-played-slot">
+                <span class="slot-placeholder">Sua Carta</span>
+              </div>
+            </div>
+
+            <!-- Mensagens de Feedback no meio da mesa -->
+            <div class="round-feedback" id="round-feedback">
+              Distribua as cartas para começar
+            </div>
+          </section>
+
+          <!-- Área do Jogador -->
+          <section class="player-area" id="player-area">
+            <div class="player-status-line">
+              <span class="turn-indicator" id="turn-indicator">Sua vez de jogar</span>
+              <div class="encoberta-toggle-container" id="encoberta-toggle-wrapper">
+                <label class="switch-label" title="Jogar a próxima carta virada para baixo (apenas na 2ª ou 3ª rodada)">
+                  <input type="checkbox" id="chk-encoberta">
+                  <span class="switch-slider"></span>
+                  <span class="switch-text">🙈 Jogar Encoberta</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Mão do Jogador (3 cartas) -->
+            <div class="player-hand" id="player-hand">
+              <!-- Cartas renderizadas via JS -->
+            </div>
+          </section>
+
+          <!-- Barra de Ações (Truco, Aceitar, Correr, Aumentar) -->
+          <footer class="action-panel" id="action-panel">
+            <div class="primary-actions" id="normal-actions">
+              <button id="btn-truco" class="btn-truco-special pulse-anim" title="Pedir Truco!">
+                💥 TRUCO! (4 pts)
+              </button>
+            </div>
+
+            <!-- Ações de Resposta a Desafio de Truco -->
+            <div class="challenge-actions" id="challenge-actions" style="display: none;">
+              <div class="challenge-alert" id="challenge-alert">
+                Tião pediu <strong>TRUCO!</strong> O que você faz?
+              </div>
+              <div class="challenge-buttons">
+                <button id="btn-accept" class="btn-action btn-cair">
+                  ✅ CAIR (Aceitar)
+                </button>
+                <button id="btn-raise" class="btn-action btn-aumentar">
+                  🔥 AUMENTAR!
+                </button>
+                <button id="btn-fold" class="btn-action btn-correr">
+                  🏃 CORRER (Fugir)
+                </button>
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      </main>
+
+      <!-- Log de Histórico de Jogadas -->
+      <section class="game-log-panel">
+        <details>
+          <summary>📜 Histórico da Partida</summary>
+          <div class="log-stream" id="log-stream">
+            <p class="log-entry system">Partida iniciada. Primeiro a fazer 12 pontos ganha!</p>
+          </div>
+        </details>
+      </section>
+
+    </div><!-- Fim do screen-shake-wrapper -->
+
+    <!-- Banner Impacto de "TRUUUCO!" Gigante -->
+    <div class="truco-banner-overlay" id="truco-banner">
+      <div class="truco-banner-content">
+        <h2 id="truco-banner-title">TRUUUUCO!</h2>
+        <p id="truco-banner-subtitle">O caldo vai engrossar!</p>
+      </div>
+    </div>
+
+    <!-- Modal de Regras do Truco Mineiro -->
+    <div class="modal-overlay" id="rules-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Regras do Truco Mineiro ♣♥♠♦</h2>
+          <button class="modal-close" id="btn-close-rules">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="rules-section">
+            <h3>1. As 4 Manilhas Fixas (Da maior para a menor)</h3>
+            <p>Diferente do truco paulista, no <strong>Truco Mineiro</strong> as manilhas nunca mudam:</p>
+            <div class="manilhas-showcase">
+              <div class="manilha-item">
+                <div class="manilha-card-demo paus">4♣</div>
+                <div class="manilha-desc">
+                  <strong>Zap / Gato (4 de Paus)</strong>
+                  <span>A mais forte de todo o baralho!</span>
+                </div>
+              </div>
+              <div class="manilha-item">
+                <div class="manilha-card-demo copas">7♥</div>
+                <div class="manilha-desc">
+                  <strong>Copeta (7 de Copas)</strong>
+                  <span>Segunda maior manilha.</span>
+                </div>
+              </div>
+              <div class="manilha-item">
+                <div class="manilha-card-demo espadas">A♠</div>
+                <div class="manilha-desc">
+                  <strong>Espadilha (Ás de Espadas)</strong>
+                  <span>Terceira maior manilha.</span>
+                </div>
+              </div>
+              <div class="manilha-item">
+                <div class="manilha-card-demo ouros">7♦</div>
+                <div class="manilha-desc">
+                  <strong>Pica-fumo / Moleque (7 de Ouros)</strong>
+                  <span>Quarta maior manilha.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <h3>2. Força das Demais Cartas</h3>
+            <p class="cards-order-desc">
+              Após as manilhas, a ordem de força decrescente é:<br>
+              <strong>3 &gt; 2 &gt; Ás (Copas, Paus, Ouros) &gt; K (Rei) &gt; J (Valete) &gt; Q (Dama) &gt; 7 (Paus, Espadas) &gt; 6 &gt; 5 &gt; 4 (demais naipes)</strong>.
+            </p>
+          </div>
+
+          <div class="rules-section">
+            <h3>3. Pontuação e Aumentos (Tradicional Mineiro)</h3>
+            <ul>
+              <li><strong>Mão simples:</strong> Vale <strong>2 tentos</strong>.</li>
+              <li><strong>Truco:</strong> Sobe para <strong>4 tentos</strong>.</li>
+              <li><strong>Seis:</strong> Sobe para <strong>8 tentos</strong>.</li>
+              <li><strong>Dez / Doze:</strong> Sobe para <strong>10 ou 12 tentos</strong> (a mão que define o jogo).</li>
+              <li>Vence quem atingir <strong>12 pontos</strong> primeiro!</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <h3>4. Empates (Canga)</h3>
+            <ul>
+              <li>Se a <strong>1ª rodada empatar</strong>, quem ganhar a 2ª leva a mão.</li>
+              <li>Se a <strong>2ª empatar</strong>, quem venceu a 1ª leva a mão.</li>
+              <li>Se todas empatarem, ninguém pontua.</li>
+              <li>Pode jogar <strong>carta encoberta</strong> na 2ª e 3ª rodada se quiser blefar ou esconder jogo!</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" id="btn-understood-rules">Entendi, vamos jogar!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Vitória / Derrota da Partida -->
+    <div class="modal-overlay" id="endgame-modal" style="display: none;">
+      <div class="modal-card modal-celebration">
+        <div class="trophy-icon" id="endgame-icon">🏆</div>
+        <h2 id="endgame-title">Vitória Mineira!</h2>
+        <p id="endgame-message">Você mandou o Tião de volta pra roça com 12 pontos!</p>
+        <div class="endgame-stats">
+          <div class="stat-box">
+            <span class="stat-name">Seus Pontos</span>
+            <span class="stat-value" id="final-player-score">12</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-name">Pontos do Tião</span>
+            <span class="stat-value" id="final-bot-score">6</span>
+          </div>
+        </div>
+        <button class="btn-primary btn-big" id="btn-play-again">Jogar Novamente</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
